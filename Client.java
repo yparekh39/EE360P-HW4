@@ -1,11 +1,17 @@
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Client {
   public static void main (String[] args) {
+    List<ServerInfo> servers = new ArrayList<ServerInfo>();
     Scanner sc = new Scanner(System.in);
     int numServer = sc.nextInt();
     
     for (int i = 0; i < numServer; i++) {
+      String serverString = sc.nextLine();
+      String[] serverStrSplit = serverString.split(":");
+      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])));
       // TODO: parse inputs to get the ips and ports of servers
     }
 
@@ -30,4 +36,6 @@ public class Client {
       }
     }
   }
+
+  
 }
