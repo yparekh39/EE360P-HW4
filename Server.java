@@ -1,28 +1,57 @@
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server {
-  public static void main (String[] args) {
 
+  public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
+  public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
+
+  public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
     int myID = sc.nextInt();
     int numServer = sc.nextInt();
+    String myAddress;
+    int myPort;
     String inventoryPath = sc.next();
+    List<ServerInfo> servers = new ArrayList<ServerInfo>();
 
     System.out.println("[DEBUG] my id: " + myID);
     System.out.println("[DEBUG] numServer: " + numServer);
     System.out.println("[DEBUG] inventory path: " + inventoryPath);
+    
     for (int i = 0; i < numServer; i++) {
-      // TODO: parse inputs to get the ips and ports of servers
       String str = sc.next();
-      System.out.println("address for server " + i + ": " + str);
+      String[] serverStrSplit = serverString.split(":");
+      
+      if(i == myID){ 
+        myAddress = serverStrSplit[0];
+        myPort = Integer.parseInt(serverStrSplit[1]).intValue());
+        continue; 
+      }
+      
+      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])));
     }
   
-    while (true) {
+    File file = new File(inventoryPath);
+    Scanner fileScanner = null;
+    try{
+      fileScanner = new Scanner(file);
+    }catch(Exception e){
+      System.out.println("ERROR: File Not Found");
+      System.exit(-1);
     }
-    // TODO: start server socket to communicate with clients and other servers
-    
-    // TODO: parse the inventory file
 
+    while(fileScanner.hasNext()){
+      String input = fileScanner.nextLine();
+      String[] splitInput = input.split(" ");
+      inventory.put(splitInput[0], Integer.parseInt(splitInput[1]));
+    }
+
+    TCPServer tcpServerThread = new TCPServer(myPort);
+    Thread tcpServer = new Thread(tcpServerThread);
+    tcpServer.start();
+    
     // TODO: handle request from client
   }
   
