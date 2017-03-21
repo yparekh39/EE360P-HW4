@@ -1,6 +1,8 @@
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.List;
+import java.net.*;
+import java.io.*;
+import java.util.*; 
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
 
 public class Server {
 
@@ -12,27 +14,27 @@ public class Server {
     int myID = sc.nextInt();
     int numServer = sc.nextInt();
     String myAddress;
-    int myPort;
+    int myPort = -1;
     String inventoryPath = sc.next();
     List<ServerInfo> servers = new ArrayList<ServerInfo>();
 
     System.out.println("[DEBUG] my id: " + myID);
     System.out.println("[DEBUG] numServer: " + numServer);
     System.out.println("[DEBUG] inventory path: " + inventoryPath);
-    
+    //Establish list of servers from input
     for (int i = 0; i < numServer; i++) {
       String str = sc.next();
-      String[] serverStrSplit = serverString.split(":");
+      String[] serverStrSplit = str.split(":");
       
       if(i == myID){ 
         myAddress = serverStrSplit[0];
-        myPort = Integer.parseInt(serverStrSplit[1]).intValue());
+        myPort = Integer.parseInt(serverStrSplit[1]);
         continue; 
       }
       
       servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])));
     }
-  
+    //Inventory Parsing
     File file = new File(inventoryPath);
     Scanner fileScanner = null;
     try{
@@ -47,7 +49,7 @@ public class Server {
       String[] splitInput = input.split(" ");
       inventory.put(splitInput[0], Integer.parseInt(splitInput[1]));
     }
-
+    //Create server socket
     TCPServer tcpServerThread = new TCPServer(myPort);
     Thread tcpServer = new Thread(tcpServerThread);
     tcpServer.start();
@@ -57,6 +59,7 @@ public class Server {
   
   //TODO: MUTEX THESE
 
+  //TODO: FIX ORDER NUMBER OPERATIONS TO SET ORDER NUMBER TO LAMPORT TIMESTAMP, NOT ATOMIC INTEGER COUNTER
   public static synchronized String purchase(String[] st){
     // purchase <user-name> <product-name> <quantity> – inputs the name of a customer, the
     // name of the product, and the number of quantity that the user wants to purchase. The client
@@ -82,12 +85,14 @@ public class Server {
         return "Not Available - Not enough items";
       }
 
-      int myOrderNumber = currentOrder.getAndIncrement();
-      Order order = new Order(username, myOrderNumber, productName, quantityRequested.intValue());
-      Integer newProductQuantity = new Integer(productQuantity.intValue() - quantityRequested.intValue());
-      userOrders.put(new Integer(myOrderNumber), order);
-      inventory.put(productName, newProductQuantity);
-      return ("Your order has been placed, " + myOrderNumber + " " + username + " " + productName + " " + quantityRequested.toString());
+      // FIX ORDER NUMBER ASSIGNMENT TO USE LAMPORT TIMESTAMP
+      // int myOrderNumber = currentOrder.getAndIncrement();
+      // Order order = new Order(username, myOrderNumber, productName, quantityRequested.intValue());
+      // Integer newProductQuantity = new Integer(productQuantity.intValue() - quantityRequested.intValue());
+      // userOrders.put(new Integer(myOrderNumber), order);
+      // inventory.put(productName, newProductQuantity);
+      // return ("Your order has been placed, " + myOrderNumber + " " + username + " " + productName + " " + quantityRequested.toString());
+      return "FIX PURCHASE TO USE LAMPORT TIMESTAMPS FOR ORDER IDS";
   }
 
   public static synchronized String cancel(String[] st){
