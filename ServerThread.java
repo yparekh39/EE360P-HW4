@@ -22,8 +22,8 @@ public class ServerThread implements Runnable {
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
         if (splitIn[0].equals("purchase")) {
-          //TODO: SEND REQUEST TO OTHER SERVERS
-          //TODO: INCREMENT LOCAL CLOCK BY 1
+          //TODO: SPAWN THREAD REQUESTS TO SEND REQUESTS TO OTHER SERVERS
+          //TODO: EACH THREAD WILL WAIT FOR THE ACK, UPDATE THE CLOCK
           outputLine = Server.purchase(splitIn);
           out.println(outputLine);
           out.println("END");
@@ -52,6 +52,8 @@ public class ServerThread implements Runnable {
         }
         else if (splitIn[0].equals("request")){
           //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
+          //TODO: SEND ACK
+          
 
         }
         else {
