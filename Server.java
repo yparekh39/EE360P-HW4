@@ -9,10 +9,11 @@ public class Server {
   public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
   public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
   public static int clock = 0;
+  public static int myID;
 
   public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
-    int myID = sc.nextInt();
+    myID = sc.nextInt();
     int numServer = sc.nextInt();
     String myAddress;
     int myPort = -1;
@@ -176,7 +177,7 @@ public class Server {
   }
 
   //TODO: ENQUEUE ANY REQUESTS RECEIVED FROM OTHER SERVERS OR COMMANDS RECEIVED FROM THIS CLIENT, THEN REORDER QUEUE
-  public static synchronized void enqueueRequest(){
+  public static synchronized void enqueueRequest(Request req){
 
   }
 }
