@@ -9,15 +9,16 @@ public class Server {
   public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
   public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
   public static AtomicInteger clock = new AtomicInteger(0);
+  public static List<ServerInfo> servers = new ArrayList<ServerInfo>();
+  public static int myID = 0;
 
   public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
-    int myID = sc.nextInt();
+    myID = sc.nextInt();
     int numServer = sc.nextInt();
     String myAddress;
     int myPort = -1;
     String inventoryPath = sc.next();
-    List<ServerInfo> servers = new ArrayList<ServerInfo>();
 
     System.out.println("[DEBUG] my id: " + myID);
     System.out.println("[DEBUG] numServer: " + numServer);

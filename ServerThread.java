@@ -8,6 +8,7 @@ public class ServerThread implements Runnable {
 
   public ServerThread(Socket socket){
     this.socket = socket;
+    this.servers = servers;
   }
 
   public void run(){
@@ -21,6 +22,13 @@ public class ServerThread implements Runnable {
       String inputLine, outputLine;
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
+        if(!splitIn[0].equals("request") || !splitIn[0].equals("ack") || !splitIn[0].equals("release")){
+          ExecutorService executor = Executors.newCachedThreadPool();
+          List<Callable<Integer>> requestTaskList = new List<Callable<Integer>>();
+          for(server : Server.servers){
+            requestTaskList.add(new RequestThread())
+          }
+        }
         if (splitIn[0].equals("purchase")) {
           //TODO: SPAWN THREAD REQUESTS TO SEND REQUESTS TO OTHER SERVERS
           //TODO: EACH THREAD WILL WAIT FOR THE ACK, UPDATE THE CLOCK

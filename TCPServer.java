@@ -6,8 +6,10 @@ import java.util.concurrent.atomic.*;
 
 public class TCPServer implements Runnable{
 	int tcpPort;
+
 	public TCPServer(int port){
 		this.tcpPort = port;
+		this.servers = servers;
 	}
 	
 	public void run(){
