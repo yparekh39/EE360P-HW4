@@ -59,9 +59,20 @@ public class ServerThread implements Runnable {
           out.println("END");
         }
         else if (splitIn[0].equals("request")){
-          //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
           //TODO: SEND ACK
+          out.println("ack " + Server.getClock);
+          //TODO: PUT REQUEST IN QUEUE
+          Server.enqueueRequest(new Request(Server.myID + " ", Server.getClock() + " "));
+          //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
+          int localClk = Server.getClock();
+          int requestClk = Integer.parseInt(splitIn[2]);
+          if(localClk < requestClk)
+            Server.setClock(requestClk + 1);
+          else
+            Server.setClock(localClk + 1);
           
+
+
 
         }
         else {

@@ -8,8 +8,8 @@ public class Server {
 
   public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
   public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
-  public static AtomicInteger clock = new AtomicInteger(0);
   public static List<ServerInfo> servers = new ArrayList<ServerInfo>();
+  public static int clock = 0;
   public static int myID = 0;
 
   public static void main (String[] args) {
@@ -166,5 +166,18 @@ public class Server {
       output += (entry.getKey() + " " + entry.getValue().toString() + "\n");
     }
     return output.substring(0, output.length()-1);
+  }
+
+  public static synchronized Integer getClock(){
+    return clock;
+  }
+
+  public static synchronized Integer setClock(int newClk){
+    clock = newClk;
+  }
+
+  //TODO: ENQUEUE ANY REQUESTS RECEIVED FROM OTHER SERVERS OR COMMANDS RECEIVED FROM THIS CLIENT, THEN REORDER QUEUE
+  public static synchronized void enqueueRequest(Request req){
+
   }
 }
