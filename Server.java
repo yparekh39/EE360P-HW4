@@ -8,6 +8,7 @@ public class Server {
 
   public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
   public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
+  public static AtomicInteger clock = new AtomicInteger(0);
 
   public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
@@ -26,7 +27,7 @@ public class Server {
       String str = sc.next();
       String[] serverStrSplit = str.split(":");
       
-      if(i == myID){ 
+      if(i == myID -1){ 
         myAddress = serverStrSplit[0];
         myPort = Integer.parseInt(serverStrSplit[1]);
         continue; 

@@ -8,7 +8,7 @@ public class Client {
   public static void main (String[] args) {
     List<ServerInfo> servers = new ArrayList<ServerInfo>();
     Scanner sc = new Scanner(System.in);
-    int numServer = sc.nextInt();
+    int numServer = Integer.parseInt(sc.nextLine());
     
     for (int i = 0; i < numServer; i++) {
       String serverString = sc.nextLine();
@@ -39,6 +39,7 @@ public class Client {
 
         String cmd = sc.nextLine();
         String[] tokens = cmd.split(" ");
+        String line;
 
         if (tokens[0].equals("purchase")) {
           // TODO: send appropriate command to the server and display the

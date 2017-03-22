@@ -22,26 +22,38 @@ public class ServerThread implements Runnable {
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
         if (splitIn[0].equals("purchase")) {
+          //TODO: SEND REQUEST TO OTHER SERVERS
+          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.purchase(splitIn);
           out.println(outputLine);
           out.println("END");
         }
         else if (splitIn[0].equals("cancel")) {
+          //TODO: SEND REQUEST TO OTHER SERVERS
+          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.cancel(splitIn);
           out.println(outputLine);
           out.println("END");
         } 
 
         else if (splitIn[0].equals("search")) {
+          //TODO: SEND REQUEST TO OTHER SERVERS
+          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.search(splitIn);
           out.println(outputLine);
           out.println("END");
         } 
         else if (splitIn[0].equals("list")) {
+          //TODO: SEND REQUEST TO OTHER SERVERS
+          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.list(splitIn);
           out.println(outputLine);
           out.println("END");
-        } 
+        }
+        else if (splitIn[0].equals("request")){
+          //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
+
+        }
         else {
           System.out.println("ERROR: No such command");
         }
