@@ -178,22 +178,46 @@ public class Server {
   }
 
   public static synchronized void enqueueRequest(Request req){
+    System.out.prinltn("Queue before enqueue:");
+    for(int i = 0; i < lamportQueue.Size(); i++){
+      System.out.println(req);
+    }
+    System.out.println("Enqueueing Request: " + req);
     lamportQueue.add(req);
     Collections.sort(lamportQueue);
+    System.out.prinltn("Queue after enqueue and sort: \n");
+    for(int i = 0; i < lamportQueue.Size(); i++){
+      System.out.println(req);
+    }
   }
 
   public static synchronized void dequeueRequest(){
+    System.out.prinltn("Queue before dequeue: \n");
+    for(int i = 0; i < lamportQueue.Size(); i++){
+      System.out.println(req);
+    }
+    System.out.println("Dequeueing Request: " + lamportQueue.get(0));
     lamportQueue.remove(0);
     Collections.sort(lamportQueue);
+    System.out.prinltn("Queue after dequeue and sort: \n");
+    for(int i = 0; i < lamportQueue.Size(); i++){
+      System.out.println(req);
+    }
   }
 
   public static synchronized void removeCrashedServerRequests(int crashedID){
     List<Request> newLamportQueue = new ArrayList<Request>();
+    System.out.println("Queue before removing crashed requests:");
     for(Request req : lamportQueue){
+      System.out.println(req);
       if(req.serverID != crashedID)
         newLamportQueue.add(req);
     }
     lamportQueue = newLamportQueue;
     Collections.sort(lamportQueue);
+    System.out.prinltn("New queue after removal of crashed requests: \n");
+    for(int i = 0; i < lamportQueue.Size(); i++){
+      System.out.println(req);
+    }
   }
 }

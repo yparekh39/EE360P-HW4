@@ -36,7 +36,7 @@ public class ServerThread implements Runnable {
             e.printStackTrace();
           }
           List<Integer> requestResponses = new ArrayList<Integer>();
-          for(future : requestfutures){
+          for(Future future : requestfutures){
             try{
               Integer result = future.get();
               requestResponses.add(result);
