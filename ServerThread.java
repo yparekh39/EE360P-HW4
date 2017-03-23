@@ -12,15 +12,17 @@ public class ServerThread implements Runnable {
   }
 
   public void run(){
+    System.out.println("Entered run");
     try(
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
           BufferedReader in = new BufferedReader(
               new InputStreamReader(
                   socket.getInputStream()));
-    ) {
+    ){
+      
       //do client/server things here
       String inputLine, outputLine;
-      while ((inputLine = in.readLine()) != null) {
+      while ((inputLine = in.readLine()) != null){
         String[] splitIn = inputLine.split(" ");
         //If an actual command, send request to all servers and wait for acks
         if(splitIn[0].equals("purchase") || splitIn[0].equals("cancel") || splitIn[0].equals("list") || splitIn[0].equals("search")){
@@ -78,17 +80,18 @@ public class ServerThread implements Runnable {
           Server.enqueueRequest(req);
           //Check if we are head of queue - lock if not
           Server.queueLock.lock();
-          //Wait for our request to be at the head
           try{
-            while(!(lamportQueue.get(0).serverID == Server.myID && lamportQueue.get(0).timestamp == myClock)){
-              otherRequestAhead.await();
+            while(!(Server.lamportQueue.get(0).serverID == Server.myID && Server.lamportQueue.get(0).timestamp == myClock)){
+              System.out.println("We're locking");
+              Server.otherRequestAhead.await();
             }
-          } catch (Exception e){
-              e.printStackTrace();
+          } catch (Exception e) {
+            e.printStackTrace();
           } finally {
             Server.queueLock.unlock();
           }
-          //TODO: SERVICE REQUEST
+          System.out.println("We got past the lock");
+
           if (splitIn[0].equals("purchase")) {
             outputLine = Server.purchase(splitIn);
             out.println(outputLine);
@@ -110,13 +113,6 @@ public class ServerThread implements Runnable {
             out.println(outputLine);
             out.println("END");
           }
-
-          //TODO: DEQUEUE REQUEST
-
-          //TODO: SEND RELEASE NOTICE TO ALL THREADS
-
-          //otherRequestAhead.signalAll();
-
         }
         
         else if (splitIn[0].equals("request")){

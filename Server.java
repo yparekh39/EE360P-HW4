@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.*; 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public class Server {
 
@@ -13,9 +14,10 @@ public class Server {
   public static int clock = 0;
   public static int myID = 0;
   public static Lock queueLock = new ReentrantLock();
-  Condition otherRequestAhead;
+  public static Condition otherRequestAhead;
 
   public static void main (String[] args) {
+    lamportQueue.add(new Request(-1, -1, "Dummy Task that blocks other tasks"));
     Scanner sc = new Scanner(System.in);
     myID = sc.nextInt();
     int numServer = sc.nextInt();

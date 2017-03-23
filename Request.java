@@ -32,15 +32,15 @@ public class Request implements Comparable<Request>{
 	@Override
 	public int compareTo(Request reqB){
 		if(timestamp < reqB.timestamp)
-			return 1;
+			return -1;
 		else if(timestamp == reqB.timestamp){
 			if(serverID < reqB.serverID)
-				return 1;
-			else
 				return -1;
+			else
+				return 1;
 		}
 		else
-			return -1;
+			return 1;
 	}
 
 }

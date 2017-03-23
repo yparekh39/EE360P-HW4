@@ -87,7 +87,7 @@ public class Client {
         } else {
           System.out.println("ERROR: No such command");
         }
-      } catch(Exception e){ }
+      } catch(Exception e){ e.printStackTrace();}
     }
 
   }
