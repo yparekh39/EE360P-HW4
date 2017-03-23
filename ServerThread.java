@@ -90,6 +90,13 @@ public class ServerThread implements Runnable {
           else
             Server.setClock(localClk + 1);
         }
+        else if (splitIn[0].equals("release")){
+          //SEND ACK
+          out.println("ack " + Server.getClock());
+          //Dequeue
+          Server.dequeueRequest();
+          //update Inventory
+        }
         else if(splitIn[0].equals("crashed")){
           //remove crashed server from the queue
         }
@@ -107,7 +114,7 @@ public class ServerThread implements Runnable {
     ExecutorService executor = Executors.newCachedThreadPool();
     List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
     //Set timestamp to be sent out/used
-    myClock = Server.clock;
+    myClock = Server.getClock();
     //Create request thread to be sent to each server
     for(ServerInfo server : Server.servers){
       requestTaskList.add(new RequestOrReleaseThread(server.ipAddr, server.port, Server.myID, myClock, type));
