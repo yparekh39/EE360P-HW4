@@ -3,19 +3,21 @@ import java.util.concurrent.*;
 import java.net.*;
 import java.io.*;
 
-public class RequestThread implements Callable<Integer>{
+public class RequestOrReleaseThread implements Callable<Integer>{
 	private int port;
 	private String address;
 	private int myServerID;
 	private int myTimestamp;
 	private Boolean timedOut = Boolean.valueOf(false);
+	private String type;
 
-	public RequestThread(String address, int port, int myServerID, int myTimestamp){
+	public RequestOrReleaseThread(String address, int port, int myServerID, int myTimestamp, String type){
 		this.address = address;
 		this.port = port;
 		this.myServerID = myServerID;
 		this.myTimestamp = myTimestamp;
 		this.timedOut = Boolean.valueOf(false);
+		this.type = type;
 	}
 
 	//Returns 0 if cannot connect/no response, else returns Lamport Timestamp
@@ -34,7 +36,7 @@ public class RequestThread implements Callable<Integer>{
           		new BufferedReader(
             		new InputStreamReader(s.getInputStream()));
 
-          	String requestString = "request " + myServerID + " " + myTimestamp;
+          	String requestString = type + " " + myServerID + " " + myTimestamp;
           	out.println(requestString);
           	String line;
           	Timer timer = new Timer();
