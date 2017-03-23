@@ -9,7 +9,6 @@ public class TCPServer implements Runnable{
 
 	public TCPServer(int port){
 		this.tcpPort = port;
-		this.servers = servers;
 	}
 	
 	public void run(){

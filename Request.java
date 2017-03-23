@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-public class Request{
+public class Request implements Comparable<Request>{
 	public int serverID;
 	public int timestamp;
 	public String command;
@@ -25,8 +25,22 @@ public class Request{
 		return serverID == myID;
 	}
 
-	public toString(){
+	public String toString(){
 		return "request " + timestamp + " " + serverID + " " + command;
+	}
+
+	@Override
+	public int compareTo(Request reqB){
+		if(timestamp < reqB.timestamp)
+			return 1;
+		else if(timestamp == reqB.timestamp){
+			if(serverID < reqB.serverID)
+				return 1;
+			else
+				return -1;
+		}
+		else
+			return -1;
 	}
 
 }

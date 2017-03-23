@@ -9,7 +9,6 @@ public class ServerThread implements Runnable {
 
   public ServerThread(Socket socket){
     this.socket = socket;
-    this.servers = servers;
   }
 
   public void run(){
@@ -27,7 +26,7 @@ public class ServerThread implements Runnable {
           ExecutorService executor = Executors.newCachedThreadPool();
           List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
           myClock = Server.clock;
-          for(server : Server.servers){
+          for(ServerInfo server : Server.servers){
             requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
           }
           List<Future<Integer>> requestFutures = new ArrayList<Callable<Integer>>();
@@ -45,7 +44,7 @@ public class ServerThread implements Runnable {
           }
           for(int i = 0; i < requestResponses.size(); i++){
             if(requestResponses.get(i).intValue() == 0){
-              for(server : Server.servers){
+              for(ServerInfo server : Server.servers){
                 try(Socket s = new Socket();){
                   try{
                     s.connect(new InetSocketAddress(address, port), 100);
@@ -106,10 +105,6 @@ public class ServerThread implements Runnable {
             Server.setClock(requestClk + 1);
           else
             Server.setClock(localClk + 1);
-          
-
-
-
         }
         else if(splitIn[0].equals("crashed")){
           //remove crashed server from the queue
