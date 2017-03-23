@@ -76,28 +76,49 @@ public class ServerThread implements Runnable {
           //Enqueue request
           Request req = new Request(Server.myID, myClock, inputLine);
           Server.enqueueRequest(req);
-        }
-        if (splitIn[0].equals("purchase")) {
-          outputLine = Server.purchase(splitIn);
-          out.println(outputLine);
-          out.println("END");
-        }
-        else if (splitIn[0].equals("cancel")) {
-          outputLine = Server.cancel(splitIn);
-          out.println(outputLine);
-          out.println("END");
-        } 
+          //Check if we are head of queue - lock if not
+          Server.queueLock.lock();
+          //Wait for our request to be at the head
+          try{
+            while(!(lamportQueue.get(0).serverID == Server.myID && lamportQueue.get(0).timestamp == myClock)){
+              otherRequestAhead.await();
+            }
+          } catch (Exception e){
+              e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
+          //TODO: SERVICE REQUEST
+          if (splitIn[0].equals("purchase")) {
+            outputLine = Server.purchase(splitIn);
+            out.println(outputLine);
+            out.println("END");
+          }
+          else if (splitIn[0].equals("cancel")) {
+            outputLine = Server.cancel(splitIn);
+            out.println(outputLine);
+            out.println("END");
+          } 
 
-        else if (splitIn[0].equals("search")) {
-          outputLine = Server.search(splitIn);
-          out.println(outputLine);
-          out.println("END");
-        } 
-        else if (splitIn[0].equals("list")) {
-          outputLine = Server.list(splitIn);
-          out.println(outputLine);
-          out.println("END");
+          else if (splitIn[0].equals("search")) {
+            outputLine = Server.search(splitIn);
+            out.println(outputLine);
+            out.println("END");
+          } 
+          else if (splitIn[0].equals("list")) {
+            outputLine = Server.list(splitIn);
+            out.println(outputLine);
+            out.println("END");
+          }
+
+          //TODO: DEQUEUE REQUEST
+
+          //TODO: SEND RELEASE NOTICE TO ALL THREADS
+
+          //otherRequestAhead.signalAll();
+
         }
+        
         else if (splitIn[0].equals("request")){
           //SEND ACK
           out.println("ack " + Server.getClock());

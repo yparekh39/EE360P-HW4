@@ -12,6 +12,8 @@ public class Server {
   public static List<ServerInfo> servers = new ArrayList<ServerInfo>();
   public static int clock = 0;
   public static int myID = 0;
+  public static Lock queueLock = new ReentrantLock();
+  Condition otherRequestAhead;
 
   public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
@@ -20,6 +22,9 @@ public class Server {
     String myAddress;
     int myPort = -1;
     String inventoryPath = sc.next();
+
+    //LOCK FOR QUEUE
+    otherRequestAhead = queueLock.newCondition();
 
     System.out.println("[DEBUG] my id: " + myID);
     System.out.println("[DEBUG] numServer: " + numServer);
