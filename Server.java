@@ -11,7 +11,7 @@ public class Server {
   public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
   public static List<Request> lamportQueue = new ArrayList<Request>();
   public static List<ServerInfo> servers = new ArrayList<ServerInfo>();
-  public static int clock = 0;
+  public static int clock = 1;
   public static int myID = 0;
   public static Lock queueLock = new ReentrantLock();
   public static Condition otherRequestAhead;
@@ -182,6 +182,10 @@ public class Server {
 
   public static synchronized void setClock(int newClk){
     clock = newClk;
+  }
+
+  public static synchronized void incrementClock(){
+    clock+=1;
   }
 
   public static synchronized void enqueueRequest(Request req){

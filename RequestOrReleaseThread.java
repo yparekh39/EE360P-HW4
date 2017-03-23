@@ -48,13 +48,21 @@ public class RequestOrReleaseThread implements Callable<Integer>{
           	}, 100);
           	while((line = in.readLine()) != null || !timedOut.booleanValue()){
               
-              String[] splitCommand = line.split(" ");
-              if(splitCommand[0].equals("ack")){
-              	//return future with Lamport Timestamp
-              	return new Integer(Integer.parseInt(splitCommand[1]));
-              }
-              //System.out.println(line);
-              break;
+				String[] splitCommand = line.split(" ");
+				System.out.println(line);
+				if(splitCommand[0].equals("ack")){
+					//UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
+					int localClk = Server.getClock();
+					int requestClk = Integer.parseInt(splitCommand[1]);
+					if(localClk < requestClk)
+						Server.setClock(requestClk + 1);
+					else
+						Server.setClock(localClk + 1);
+	              	//return future with Lamport Timestamp
+	              	return new Integer(Integer.parseInt(splitCommand[1]));
+              	}
+				//System.out.println(line);
+				break;
             }
             timer.cancel();
             return new Integer(0);

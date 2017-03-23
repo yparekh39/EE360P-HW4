@@ -33,6 +33,7 @@ public class ServerThread implements Runnable {
           //Enqueue request
           Request req = new Request(Server.myID, myClock, inputLine);
           Server.enqueueRequest(req);
+          Server.incrementClock();
           //Check if we are head of queue - lock if not
           Server.queueLock.lock();
           try{
@@ -70,16 +71,36 @@ public class ServerThread implements Runnable {
           //Signal release and receive ack
           Server.dequeueRequest();
           signalRequestOrReleaseToOtherServers("release");
-
-          otherRequestAhead.signalAll();
+          Server.queueLock.lock();
+          try{
+            Server.otherRequestAhead.signalAll();
+          } catch (Exception e){
+            e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
+        }
+        else if(splitIn[0].equals("deq")){
+          Server.dequeueRequest();
+          signalRequestOrReleaseToOtherServers("release");
+          Server.queueLock.lock();
+          try{
+            Server.otherRequestAhead.signalAll();
+          } catch (Exception e){
+            e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
+          
+          
         }
         
         else if (splitIn[0].equals("request")){
           //SEND ACK
-          System.println("Sending ack");
+          System.out.println("Sending ack");
           out.println("ack " + Server.getClock());
           //PUT REQUEST IN QUEUE
-          Server.enqueueRequest(new Request(Integer.parseInt(splitIn[1]), Server.getClock()));
+          Server.enqueueRequest(new Request(Integer.parseInt(splitIn[1]), Integer.parseInt(splitIn[2])));
           //UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
           int localClk = Server.getClock();
           int requestClk = Integer.parseInt(splitIn[2]);
@@ -93,6 +114,14 @@ public class ServerThread implements Runnable {
           out.println("ack " + Server.getClock());
           //Dequeue
           Server.dequeueRequest();
+          Server.queueLock.lock();
+          try{
+            Server.otherRequestAhead.signalAll();
+          } catch (Exception e){
+            e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
           //update Inventory
         }
         else if(splitIn[0].equals("crashed")){
@@ -137,6 +166,7 @@ public class ServerThread implements Runnable {
     }
     //Check to see if any servers crashed, and let others know if a server crashed
     for(int i = 0; i < requestResponses.size(); i++){
+      System.out.println("Crash check: " + requestResponses.get(i).intValue());
       if(requestResponses.get(i).intValue() == 0){
         for(ServerInfo server : Server.servers){
           try(Socket s = new Socket();){

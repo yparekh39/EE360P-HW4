@@ -84,7 +84,9 @@ public class Client {
               }
               System.out.println(line);
             }
-        } else {
+        } else if(tokens[0].equals("deq")){
+            out.println("deq");
+        }else {
           System.out.println("ERROR: No such command");
         }
       } catch(Exception e){ e.printStackTrace();}
