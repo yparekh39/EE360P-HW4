@@ -69,10 +69,6 @@ public class ServerThread implements Runnable {
             Server.setClock(requestClk + 1);
           else
             Server.setClock(localClk + 1);
-          
-
-
-
         }
         else {
           System.out.println("ERROR: No such command");

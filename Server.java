@@ -177,9 +177,23 @@ public class Server {
     clock = newClk;
   }
 
-  //TODO: ENQUEUE ANY REQUESTS RECEIVED FROM OTHER SERVERS OR COMMANDS RECEIVED FROM THIS CLIENT, THEN REORDER QUEUE
   public static synchronized void enqueueRequest(Request req){
     lamportQueue.add(req);
+    Collections.sort(lamportQueue);
+  }
+
+  public static synchronized void dequeueRequest(){
+    lamportQueue.remove(0);
+    Collections.sort(lamportQueue);
+  }
+
+  public static synchronized void removeCrashedServerRequests(int crashedID){
+    List<Request> newLamportQueue = new ArrayList<Request>();
+    for(Request req : lamportQueue){
+      if(req.serverID != crashedID)
+        newLamportQueue.add(req);
+    }
+    lamportQueue = newLamportQueue;
     Collections.sort(lamportQueue);
   }
 }
