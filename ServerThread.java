@@ -28,7 +28,7 @@ public class ServerThread implements Runnable {
         //If an actual command, send request to all servers and wait for acks
         if(splitIn[0].equals("purchase") || splitIn[0].equals("cancel") || splitIn[0].equals("list") || splitIn[0].equals("search")){
           //Signal CS request and receive ack
-          signalRequestOrReleaseToOtherServers("request");
+          signalRequestOrReleaseToOtherServers("request", inputLine, myClock);
 
           //Enqueue request
           Request req = new Request(Server.myID, myClock, inputLine);
@@ -45,15 +45,15 @@ public class ServerThread implements Runnable {
           } finally {
             Server.queueLock.unlock();
           }
-          System.out.println("We got past the lock");
 
           if (splitIn[0].equals("purchase")) {
-            outputLine = Server.purchase(splitIn);
+            String orderID = Server.myID + "-" + myClock;
+            outputLine = Server.purchase(splitIn, orderID);
             out.println(outputLine);
             out.println("END");
           }
           else if (splitIn[0].equals("cancel")) {
-            outputLine = Server.cancel(splitIn);
+            outputLine = Server.cancel(splitIn[1]);
             out.println(outputLine);
             out.println("END");
           } 
@@ -69,8 +69,8 @@ public class ServerThread implements Runnable {
             out.println("END");
           }
           //Signal release and receive ack
-          Server.dequeueRequest();
-          signalRequestOrReleaseToOtherServers("release");
+          Request request = Server.dequeueRequest();
+          signalRequestOrReleaseToOtherServers("release", inputLine, request.timestamp);
           Server.queueLock.lock();
           try{
             Server.otherRequestAhead.signalAll();
@@ -81,8 +81,8 @@ public class ServerThread implements Runnable {
           }
         }
         else if(splitIn[0].equals("deq")){
-          Server.dequeueRequest();
-          signalRequestOrReleaseToOtherServers("release");
+          Request request = Server.dequeueRequest();
+          signalRequestOrReleaseToOtherServers("release", "line", request.timestamp);
           Server.queueLock.lock();
           try{
             Server.otherRequestAhead.signalAll();
@@ -97,7 +97,6 @@ public class ServerThread implements Runnable {
         
         else if (splitIn[0].equals("request")){
           //SEND ACK
-          System.out.println("Sending ack");
           out.println("ack " + Server.getClock());
           //PUT REQUEST IN QUEUE
           Server.enqueueRequest(new Request(Integer.parseInt(splitIn[1]), Integer.parseInt(splitIn[2])));
@@ -122,10 +121,37 @@ public class ServerThread implements Runnable {
           } finally {
             Server.queueLock.unlock();
           }
-          //update Inventory
+          //update Inventory and Order
+          System.out.println(splitIn[splitIn.length-1]);
+          String update = splitIn[splitIn.length-1];
+          String[] splitUpdate = update.split(":");
+          if(!splitUpdate[0].equals("NOCHANGE")){
+            if(splitUpdate[0].equals("PURCHASE")){
+              System.out.println("updating inventory on: " + Server.myID);
+              String orderID = splitUpdate[1];
+              String[] purchase = new String[4];
+              for(int i = 0; i < 3; i++){
+                purchase[i+1] = splitUpdate[i+2];
+              }
+              purchase[0] = "purchase";
+              Server.purchase(purchase, orderID);
+            } else if(splitUpdate[0].equals("CANCEL")){
+              Server.cancel(splitUpdate[1]);
+            }
+
+          }
         }
         else if(splitIn[0].equals("crashed")){
-          //remove crashed server from the queue
+          //remove crashed server from the queue and notify
+          Server.removeCrashedServerRequests(Integer.parseInt(splitIn[1]));
+          Server.queueLock.lock();
+          try{
+            Server.otherRequestAhead.signalAll();
+          } catch (Exception e){
+            e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
         }
         else {
           System.out.println("ERROR: No such command");
@@ -137,14 +163,14 @@ public class ServerThread implements Runnable {
     }
   }
 
-  public void signalRequestOrReleaseToOtherServers(String type){
+  public void signalRequestOrReleaseToOtherServers(String type, String command, int requestTimestamp){
     ExecutorService executor = Executors.newCachedThreadPool();
     List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
     //Set timestamp to be sent out/used
     myClock = Server.getClock();
     //Create request thread to be sent to each server
     for(ServerInfo server : Server.servers){
-      requestTaskList.add(new RequestOrReleaseThread(server.ipAddr, server.port, Server.myID, myClock, type));
+      requestTaskList.add(new RequestOrReleaseThread(server.ipAddr, server.port, Server.myID, myClock, type, command, requestTimestamp));
     }
     System.out.println(requestTaskList.size());
     List<Future<Integer>> requestFutures = new ArrayList<Future<Integer>>();
@@ -160,13 +186,10 @@ public class ServerThread implements Runnable {
       try{
         Integer result = future.get();
         requestResponses.add(result);
-      } catch (Exception e){
-        System.out.println("FIX THIS CATCH STATEMENT");
-      }
+      } catch (Exception e){ e.printStackTrace(); }
     }
     //Check to see if any servers crashed, and let others know if a server crashed
     for(int i = 0; i < requestResponses.size(); i++){
-      System.out.println("Crash check: " + requestResponses.get(i).intValue());
       if(requestResponses.get(i).intValue() == 0){
         for(ServerInfo server : Server.servers){
           try(Socket s = new Socket();){

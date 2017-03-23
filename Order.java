@@ -1,11 +1,11 @@
 public class Order{
 	String user;
-	int id;
+	String id;
 	String productName;
 	int quantity;
 	boolean canceled;
 
-	public Order(String user, int id, String productName, int quantity){
+	public Order(String user, String id, String productName, int quantity){
 		this.user = user;
 		this.id = id;
 		this.productName = productName;
