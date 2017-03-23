@@ -22,10 +22,13 @@ public class ServerThread implements Runnable {
       String inputLine, outputLine;
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
+        //If an actual command, send request to all servers and wait for acks
         if(!splitIn[0].equals("request") || !splitIn[0].equals("ack") || !splitIn[0].equals("release") || !splitIn[0].equals("crashed")){
           ExecutorService executor = Executors.newCachedThreadPool();
           List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
+          //Set timestamp to be sent out/used
           myClock = Server.clock;
+          //Create request thread to be sent to each server
           for(ServerInfo server : Server.servers){
             requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
           }
@@ -35,6 +38,7 @@ public class ServerThread implements Runnable {
           } catch (InterruptedException e){
             e.printStackTrace();
           }
+          //Wait for response from all servers
           List<Integer> requestResponses = new ArrayList<Integer>();
           for(Future<Integer> future : requestFutures){
             try{
@@ -67,40 +71,32 @@ public class ServerThread implements Runnable {
           }
         }
         if (splitIn[0].equals("purchase")) {
-          //TODO: SPAWN THREAD REQUESTS TO SEND REQUESTS TO OTHER SERVERS
-          //TODO: EACH THREAD WILL WAIT FOR THE ACK, UPDATE THE CLOCK
           outputLine = Server.purchase(splitIn);
           out.println(outputLine);
           out.println("END");
         }
         else if (splitIn[0].equals("cancel")) {
-          //TODO: SEND REQUEST TO OTHER SERVERS
-          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.cancel(splitIn);
           out.println(outputLine);
           out.println("END");
         } 
 
         else if (splitIn[0].equals("search")) {
-          //TODO: SEND REQUEST TO OTHER SERVERS
-          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.search(splitIn);
           out.println(outputLine);
           out.println("END");
         } 
         else if (splitIn[0].equals("list")) {
-          //TODO: SEND REQUEST TO OTHER SERVERS
-          //TODO: INCREMENT LOCAL CLOCK BY 1
           outputLine = Server.list(splitIn);
           out.println(outputLine);
           out.println("END");
         }
         else if (splitIn[0].equals("request")){
-          //TODO: SEND ACK
+          //SEND ACK
           out.println("ack " + Server.getClock());
-          //TODO: PUT REQUEST IN QUEUE
-          Server.enqueueRequest(new Request(Server.myID + " ", Server.getClock() + " "));
-          //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
+          //PUT REQUEST IN QUEUE
+          Server.enqueueRequest(new Request(Server.myID, Server.getClock()));
+          //UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
           int localClk = Server.getClock();
           int requestClk = Integer.parseInt(splitIn[2]);
           if(localClk < requestClk)

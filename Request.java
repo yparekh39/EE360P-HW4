@@ -9,15 +9,15 @@ public class Request implements Comparable<Request>{
 	public int timestamp;
 	public String command;
 
-	public Request(String id, String ts, String cmd){
-		timestamp = Integer.parseInt(ts);
-		serverID = Integer.parseInt(id);
+	public Request(int id, int ts, String cmd){
+		timestamp = ts;
+		serverID = id;
 		command = cmd;
 	}
 
-	public Request(String id, String ts){
-		serverID = Integer.parseInt(id);
-		timestamp = Integer.parseInt(ts);
+	public Request(int id, int ts){
+		serverID = id;
+		timestamp = ts;
 		command = "NOT MY CLIENT";
 	}
 
