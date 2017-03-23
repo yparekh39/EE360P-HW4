@@ -29,17 +29,19 @@ public class ServerThread implements Runnable {
           for(ServerInfo server : Server.servers){
             requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
           }
-          List<Future<Integer>> requestFutures = new ArrayList<Callable<Integer>>();
+          List<Future<Integer>> requestFutures = new ArrayList<Future<Integer>>();
           try{
             requestFutures = executor.invokeAll(requestTaskList);
           } catch (InterruptedException e){
             e.printStackTrace();
           }
           List<Integer> requestResponses = new ArrayList<Integer>();
-          for(Future future : requestfutures){
+          for(Future<Integer> future : requestFutures){
             try{
               Integer result = future.get();
               requestResponses.add(result);
+            } catch (Exception e){
+              System.out.println("FIX THIS CATCH STATEMENT");
             }
           }
           for(int i = 0; i < requestResponses.size(); i++){
@@ -47,7 +49,7 @@ public class ServerThread implements Runnable {
               for(ServerInfo server : Server.servers){
                 try(Socket s = new Socket();){
                   try{
-                    s.connect(new InetSocketAddress(address, port), 100);
+                    s.connect(new InetSocketAddress(server.ipAddr, server.port), 100);
                   } catch(Exception e){
                        //no response, unable to connect
                   }
@@ -95,7 +97,7 @@ public class ServerThread implements Runnable {
         }
         else if (splitIn[0].equals("request")){
           //TODO: SEND ACK
-          out.println("ack " + Server.getClock);
+          out.println("ack " + Server.getClock());
           //TODO: PUT REQUEST IN QUEUE
           Server.enqueueRequest(new Request(Server.myID + " ", Server.getClock() + " "));
           //TODO: UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK

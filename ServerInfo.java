@@ -4,7 +4,7 @@ public class ServerInfo {
     public int serverID;
     public ServerInfo(String ipAddr, int port, int serverID){
       this.ipAddr = ipAddr;
-      this.port = port.intValue();
+      this.port = port;
       this.serverID = serverID;
     }
   }
