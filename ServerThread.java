@@ -48,6 +48,7 @@ public class ServerThread implements Runnable {
               System.out.println("FIX THIS CATCH STATEMENT");
             }
           }
+          //Check to see if any servers crashed, and let others know if a server crashed
           for(int i = 0; i < requestResponses.size(); i++){
             if(requestResponses.get(i).intValue() == 0){
               for(ServerInfo server : Server.servers){
@@ -69,6 +70,9 @@ public class ServerThread implements Runnable {
               }
             }
           }
+          //Enqueue request
+          Request req = new Request(Server.myID, myClock, inputLine);
+          Server.enqueueRequest(req);
         }
         if (splitIn[0].equals("purchase")) {
           outputLine = Server.purchase(splitIn);

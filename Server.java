@@ -185,21 +185,21 @@ public class Server {
     System.out.println("Enqueueing Request: " + req);
     lamportQueue.add(req);
     Collections.sort(lamportQueue);
-    System.out.println("Queue after enqueue and sort: \n");
+    System.out.println("Queue after enqueue and sort:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
   }
 
   public static synchronized void dequeueRequest(){
-    System.out.println("Queue before dequeue: \n");
+    System.out.println("Queue before dequeue:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
     System.out.println("Dequeueing Request: " + lamportQueue.get(0));
     lamportQueue.remove(0);
     Collections.sort(lamportQueue);
-    System.out.println("Queue after dequeue and sort: \n");
+    System.out.println("Queue after dequeue and sort:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
@@ -215,7 +215,7 @@ public class Server {
     }
     lamportQueue = newLamportQueue;
     Collections.sort(lamportQueue);
-    System.out.println("New queue after removal of crashed requests: \n");
+    System.out.println("New queue after removal of crashed requests:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
