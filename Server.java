@@ -34,7 +34,7 @@ public class Server {
         continue; 
       }
       
-      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])));
+      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1]), i+1));
     }
     //Inventory Parsing
     File file = new File(inventoryPath);

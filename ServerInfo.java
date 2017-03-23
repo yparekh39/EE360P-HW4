@@ -1,8 +1,10 @@
 public class ServerInfo {
     public String ipAddr;
     public int port;
-    public ServerInfo(String ipAddr, Integer port){
+    public int serverID;
+    public ServerInfo(String ipAddr, int port, int serverID){
       this.ipAddr = ipAddr;
       this.port = port.intValue();
+      this.serverID = serverID;
     }
   }

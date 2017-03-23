@@ -13,7 +13,7 @@ public class Client {
     for (int i = 0; i < numServer; i++) {
       String serverString = sc.nextLine();
       String[] serverStrSplit = serverString.split(":");
-      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])));
+      servers.add(new ServerInfo(serverStrSplit[0], Integer.parseInt(serverStrSplit[1])), i+1);
       // TODO: parse inputs to get the ips and ports of servers
     }
 

@@ -5,6 +5,7 @@ import java.util.concurrent.*;
 
 public class ServerThread implements Runnable {
   Socket socket = null;
+  int myClock = 0;
 
   public ServerThread(Socket socket){
     this.socket = socket;
@@ -22,11 +23,46 @@ public class ServerThread implements Runnable {
       String inputLine, outputLine;
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
-        if(!splitIn[0].equals("request") || !splitIn[0].equals("ack") || !splitIn[0].equals("release")){
+        if(!splitIn[0].equals("request") || !splitIn[0].equals("ack") || !splitIn[0].equals("release") || !splitIn[0].equals("crashed")){
           ExecutorService executor = Executors.newCachedThreadPool();
-          List<Callable<Integer>> requestTaskList = new List<Callable<Integer>>();
+          List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
+          myClock = Server.clock;
           for(server : Server.servers){
-            requestTaskList.add(new RequestThread())
+            requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
+          }
+          List<Future<Integer>> requestFutures = new ArrayList<Callable<Integer>>();
+          try{
+            requestFutures = executor.invokeAll(requestTaskList);
+          } catch (InterruptedException e){
+            e.printStackTrace();
+          }
+          List<Integer> requestResponses = new ArrayList<Integer>();
+          for(future : requestfutures){
+            try{
+              Integer result = future.get();
+              requestResponses.add(result);
+            }
+          }
+          for(int i = 0; i < requestResponses.size(); i++){
+            if(requestResponses.get(i).intValue() == 0){
+              for(server : Server.servers){
+                try(Socket s = new Socket();){
+                  try{
+                    s.connect(new InetSocketAddress(address, port), 100);
+                  } catch(Exception e){
+                       //no response, unable to connect
+                  }
+                  PrintWriter outCrash =
+                    new PrintWriter(s.getOutputStream(), true);
+                  BufferedReader inCrash =
+                    new BufferedReader(
+                      new InputStreamReader(s.getInputStream()));
+
+                    outCrash.println("crashed " + server.serverID);
+
+                } catch(Exception e){ }
+              }
+            }
           }
         }
         if (splitIn[0].equals("purchase")) {
@@ -74,6 +110,9 @@ public class ServerThread implements Runnable {
 
 
 
+        }
+        else if(splitIn[0].equals("crashed")){
+          //remove crashed server from the queue
         }
         else {
           System.out.println("ERROR: No such command");
