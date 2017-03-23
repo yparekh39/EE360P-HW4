@@ -23,7 +23,8 @@ public class ServerThread implements Runnable {
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
         //If an actual command, send request to all servers and wait for acks
-        if(!splitIn[0].equals("request") || !splitIn[0].equals("ack") || !splitIn[0].equals("release") || !splitIn[0].equals("crashed")){
+        if(splitIn[0].equals("purchase") || splitIn[0].equals("cancel") || splitIn[0].equals("list") || splitIn[0].equals("search")){
+          System.out.println("command was: " + splitIn[0]);
           ExecutorService executor = Executors.newCachedThreadPool();
           List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
           //Set timestamp to be sent out/used
@@ -32,12 +33,14 @@ public class ServerThread implements Runnable {
           for(ServerInfo server : Server.servers){
             requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
           }
+          System.out.println(requestTaskList.size());
           List<Future<Integer>> requestFutures = new ArrayList<Future<Integer>>();
           try{
             requestFutures = executor.invokeAll(requestTaskList);
           } catch (InterruptedException e){
             e.printStackTrace();
           }
+          System.out.println(requestFutures.size());
           //Wait for response from all servers
           List<Integer> requestResponses = new ArrayList<Integer>();
           for(Future<Integer> future : requestFutures){
@@ -99,7 +102,7 @@ public class ServerThread implements Runnable {
           //SEND ACK
           out.println("ack " + Server.getClock());
           //PUT REQUEST IN QUEUE
-          Server.enqueueRequest(new Request(Server.myID, Server.getClock()));
+          Server.enqueueRequest(new Request(Integer.parseInt(splitIn[1]), Server.getClock()));
           //UPDATE CLOCK TO REFLECT MAXIMUM IN REQUEST CLOCK VS LOCAL CLOCK, THEN INCREMENT CLOCK
           int localClk = Server.getClock();
           int requestClk = Integer.parseInt(splitIn[2]);

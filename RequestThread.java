@@ -49,7 +49,7 @@ public class RequestThread implements Callable<Integer>{
               String[] splitCommand = line.split(" ");
               if(splitCommand[0].equals("ack")){
               	//return future with Lamport Timestamp
-              	return new Integer(Integer.parseInt(splitCommand[2]));
+              	return new Integer(Integer.parseInt(splitCommand[1]));
               }
               //System.out.println(line);
               break;
