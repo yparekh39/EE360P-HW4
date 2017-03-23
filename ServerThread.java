@@ -2,16 +2,18 @@ import java.net.*;
 import java.io.*;
 import java.util.*; 
 import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
 
 public class ServerThread implements Runnable {
   Socket socket = null;
-  int myClock = 0;
+  public int myClock = 0;
 
   public ServerThread(Socket socket){
     this.socket = socket;
   }
 
   public void run(){
+    System.out.println("Created new ServerThread");
     try(
       PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
           BufferedReader in = new BufferedReader(
@@ -22,57 +24,12 @@ public class ServerThread implements Runnable {
       String inputLine, outputLine;
       while ((inputLine = in.readLine()) != null) {
         String[] splitIn = inputLine.split(" ");
+        System.out.println("command was: " + inputLine);
         //If an actual command, send request to all servers and wait for acks
         if(splitIn[0].equals("purchase") || splitIn[0].equals("cancel") || splitIn[0].equals("list") || splitIn[0].equals("search")){
-          System.out.println("command was: " + splitIn[0]);
-          ExecutorService executor = Executors.newCachedThreadPool();
-          List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
-          //Set timestamp to be sent out/used
-          myClock = Server.clock;
-          //Create request thread to be sent to each server
-          for(ServerInfo server : Server.servers){
-            requestTaskList.add(new RequestThread(server.ipAddr, server.port, Server.myID, myClock));
-          }
-          System.out.println(requestTaskList.size());
-          List<Future<Integer>> requestFutures = new ArrayList<Future<Integer>>();
-          try{
-            requestFutures = executor.invokeAll(requestTaskList);
-          } catch (InterruptedException e){
-            e.printStackTrace();
-          }
-          System.out.println(requestFutures.size());
-          //Wait for response from all servers
-          List<Integer> requestResponses = new ArrayList<Integer>();
-          for(Future<Integer> future : requestFutures){
-            try{
-              Integer result = future.get();
-              requestResponses.add(result);
-            } catch (Exception e){
-              System.out.println("FIX THIS CATCH STATEMENT");
-            }
-          }
-          //Check to see if any servers crashed, and let others know if a server crashed
-          for(int i = 0; i < requestResponses.size(); i++){
-            if(requestResponses.get(i).intValue() == 0){
-              for(ServerInfo server : Server.servers){
-                try(Socket s = new Socket();){
-                  try{
-                    s.connect(new InetSocketAddress(server.ipAddr, server.port), 100);
-                  } catch(Exception e){
-                       //no response, unable to connect
-                  }
-                  PrintWriter outCrash =
-                    new PrintWriter(s.getOutputStream(), true);
-                  BufferedReader inCrash =
-                    new BufferedReader(
-                      new InputStreamReader(s.getInputStream()));
+          //Signal CS request and receive ack
+          signalRequestOrReleaseToOtherServers("request");
 
-                    outCrash.println("crashed " + server.serverID);
-
-                } catch(Exception e){ }
-              }
-            }
-          }
           //Enqueue request
           Request req = new Request(Server.myID, myClock, inputLine);
           Server.enqueueRequest(req);
@@ -80,8 +37,8 @@ public class ServerThread implements Runnable {
           Server.queueLock.lock();
           //Wait for our request to be at the head
           try{
-            while(!(lamportQueue.get(0).serverID == Server.myID && lamportQueue.get(0).timestamp == myClock)){
-              otherRequestAhead.await();
+            while(!(Server.lamportQueue.get(0).serverID == Server.myID && Server.lamportQueue.get(0).timestamp == myClock)){
+              Server.otherRequestAhead.await();
             }
           } catch (Exception e){
               e.printStackTrace();
@@ -111,16 +68,17 @@ public class ServerThread implements Runnable {
             out.println("END");
           }
 
-          //TODO: DEQUEUE REQUEST
+          //Signal release and receive ack
+          Server.dequeueRequest();
+          signalRequestOrReleaseToOtherServers("release");
 
-          //TODO: SEND RELEASE NOTICE TO ALL THREADS
-
-          //otherRequestAhead.signalAll();
+          otherRequestAhead.signalAll();
 
         }
         
         else if (splitIn[0].equals("request")){
           //SEND ACK
+          System.println("Sending ack");
           out.println("ack " + Server.getClock());
           //PUT REQUEST IN QUEUE
           Server.enqueueRequest(new Request(Integer.parseInt(splitIn[1]), Server.getClock()));
@@ -142,6 +100,57 @@ public class ServerThread implements Runnable {
       socket.close();
     } catch (IOException e) {
           e.printStackTrace();
+    }
+  }
+
+  public void signalRequestOrReleaseToOtherServers(String type){
+    ExecutorService executor = Executors.newCachedThreadPool();
+    List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
+    //Set timestamp to be sent out/used
+    myClock = Server.clock;
+    //Create request thread to be sent to each server
+    for(ServerInfo server : Server.servers){
+      requestTaskList.add(new RequestOrReleaseThread(server.ipAddr, server.port, Server.myID, myClock, type));
+    }
+    System.out.println(requestTaskList.size());
+    List<Future<Integer>> requestFutures = new ArrayList<Future<Integer>>();
+    try{
+      requestFutures = executor.invokeAll(requestTaskList);
+    } catch (InterruptedException e){
+      e.printStackTrace();
+    }
+    System.out.println(requestFutures.size());
+    //Wait for response from all servers
+    List<Integer> requestResponses = new ArrayList<Integer>();
+    for(Future<Integer> future : requestFutures){
+      try{
+        Integer result = future.get();
+        requestResponses.add(result);
+      } catch (Exception e){
+        System.out.println("FIX THIS CATCH STATEMENT");
+      }
+    }
+    //Check to see if any servers crashed, and let others know if a server crashed
+    for(int i = 0; i < requestResponses.size(); i++){
+      if(requestResponses.get(i).intValue() == 0){
+        for(ServerInfo server : Server.servers){
+          try(Socket s = new Socket();){
+            try{
+              s.connect(new InetSocketAddress(server.ipAddr, server.port), 100);
+            } catch(Exception e){
+                 //no response, unable to connect
+            }
+            PrintWriter outCrash =
+              new PrintWriter(s.getOutputStream(), true);
+            BufferedReader inCrash =
+              new BufferedReader(
+                new InputStreamReader(s.getInputStream()));
+
+              outCrash.println("crashed " + server.serverID);
+
+          } catch(Exception e){ }
+        }
+      }
     }
   }
 }

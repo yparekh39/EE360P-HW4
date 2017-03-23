@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.*; 
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
+import java.util.concurrent.locks.*;
 
 public class Server {
 
@@ -13,7 +14,7 @@ public class Server {
   public static int clock = 0;
   public static int myID = 0;
   public static Lock queueLock = new ReentrantLock();
-  Condition otherRequestAhead;
+  public static Condition otherRequestAhead;
 
   public static void main (String[] args) {
     Scanner sc = new Scanner(System.in);
