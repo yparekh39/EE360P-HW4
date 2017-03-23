@@ -8,7 +8,7 @@ import java.util.concurrent.locks.*;
 public class Server {
 
   public static Map<String, Integer> inventory = new ConcurrentHashMap<String, Integer>();
-  public static Map<Integer, Order> userOrders = new ConcurrentHashMap<Integer, Order>();
+  public static Map<String, Order> userOrders = new ConcurrentHashMap<String, Order>();
   public static List<Request> lamportQueue = new ArrayList<Request>();
   public static List<ServerInfo> servers = new ArrayList<ServerInfo>();
   public static int clock = 1;
@@ -70,7 +70,7 @@ public class Server {
   //TODO: MUTEX THESE
 
   //TODO: FIX ORDER NUMBER OPERATIONS TO SET ORDER NUMBER TO LAMPORT TIMESTAMP, NOT ATOMIC INTEGER COUNTER
-  public static synchronized String purchase(String[] st){
+  public static synchronized String purchase(String[] st, String orderID){
     // purchase <user-name> <product-name> <quantity> – inputs the name of a customer, the
     // name of the product, and the number of quantity that the user wants to purchase. The client
     // sends this command to the server using the current mode of the appropriate protocol. If the store
@@ -95,21 +95,17 @@ public class Server {
         return "Not Available - Not enough items";
       }
 
-      // FIX ORDER NUMBER ASSIGNMENT TO USE LAMPORT TIMESTAMP
-      // int myOrderNumber = currentOrder.getAndIncrement();
-      // Order order = new Order(username, myOrderNumber, productName, quantityRequested.intValue());
-      // Integer newProductQuantity = new Integer(productQuantity.intValue() - quantityRequested.intValue());
-      // userOrders.put(new Integer(myOrderNumber), order);
-      // inventory.put(productName, newProductQuantity);
-      // return ("Your order has been placed, " + myOrderNumber + " " + username + " " + productName + " " + quantityRequested.toString());
-      return "FIX PURCHASE TO USE LAMPORT TIMESTAMPS FOR ORDER IDS";
+      Order order = new Order(username, orderID, productName, quantityRequested.intValue());
+      Integer newProductQuantity = new Integer(productQuantity.intValue() - quantityRequested.intValue());
+      userOrders.put(orderID, order);
+      inventory.put(productName, newProductQuantity);
+      return ("Your order has been placed, " + orderID + " " + username + " " + productName + " " + quantityRequested.toString());
   }
 
-  public static synchronized String cancel(String[] st){
+  public static synchronized String cancel(String orderID){
     // cancel <order-id> – cancels the order with the <order-id>. If there is no existing order
     // with the id, the response is: ‘<order-id> not found, no such order’. Otherwise, the server
     // replies: ‘Order <order-id> is canceled’ and updates the inventory
-    Integer orderID = new Integer(Integer.parseInt(st[1]));
     Order toBeCancelled = userOrders.get(orderID);
     //Order not found
     if(toBeCancelled == null){
@@ -134,7 +130,7 @@ public class Server {
     // line per order.
     String user = st[1];
     List<Order> orders = new ArrayList<Order>();
-    for(Integer orderID: userOrders.keySet()){
+    for(String orderID: userOrders.keySet()){
       String thisOrderUser = userOrders.get(orderID).user;
       boolean thisOrderCanceled = userOrders.get(orderID).canceled;
       //Order belongs to user
@@ -202,18 +198,20 @@ public class Server {
     }
   }
 
-  public static synchronized void dequeueRequest(){
+  public static synchronized Request dequeueRequest(){
     System.out.println("Queue before dequeue:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
     System.out.println("Dequeueing Request: " + lamportQueue.get(0));
+    Request request = lamportQueue.get(0);
     lamportQueue.remove(0);
     Collections.sort(lamportQueue);
     System.out.println("Queue after dequeue and sort:");
     for(int i = 0; i < lamportQueue.size(); i++){
       System.out.println(lamportQueue.get(i));
     }
+    return request;
   }
 
   public static synchronized void removeCrashedServerRequests(int crashedID){
