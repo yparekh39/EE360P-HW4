@@ -10,6 +10,7 @@ public class Client {
 
   public static void main (String[] args) {
     List<ServerInfo> servers = new ArrayList<ServerInfo>();
+    List<Integer> crashedServers = new ArrayList<Integer>();
     Scanner sc = new Scanner(System.in);
     int numServer = Integer.parseInt(sc.nextLine());
     int currServerIndex = -1;
@@ -36,19 +37,30 @@ public class Client {
       try(
         Socket socket = new Socket();
       ){
+        boolean connected = false;
         for(int i = 0; i < servers.size(); i++){
+          System.out.println("Entered Connection Loop");
+          if(crashedServers.contains(new Integer(i)))
+            continue;
+          //socket = new Socket();
+          connected = false;
           try{
+            currServerIndex = i;
             socket.connect(new InetSocketAddress(servers.get(i).ipAddr, servers.get(i).port), 100);
             //Make note of who we connected to so we can ping them
-            currServerIndex = i;
             System.out.println("Connected to server port: " + servers.get(currServerIndex).port);
             //currServerIP = servers.get(i).ipAddr;
             //currServerPort = servers.get(i).port;
+            connected = true;
           } catch(Exception e){
-            servers.remove(i);
-            continue;
+            System.out.println("Adding to crashed list server: " + i + " in top catch");
+            // servers.remove(i);
+            // i--;
+            crashedServers.add(i);
+            connected = false;
           }
-          break;
+          if(connected)
+            break;
         }
         
         PrintWriter out =
@@ -64,34 +76,58 @@ public class Client {
           // TODO: send appropriate command to the server and display the
           // appropriate responses form the server
           out.println("purchase " + tokens[1] + " " + tokens[2] + " " + tokens[3]);
+            boolean successfulRead = false;
             while((line = in.readLine()) != null){
               if(line.equals("END")){
                 break;
               }
               System.out.println(line);
+              successfulRead = true;
             }
+            if(!successfulRead){
+              serverCrashed = true;
+              System.out.println("Server crashed");
+            }
+            else
+              serverCrashed = false;
 
         } else if (tokens[0].equals("cancel")) {
           // TODO: send appropriate command to the server and display the
           // appropriate responses form the server
             out.println("cancel " + tokens[1]);
+            boolean successfulRead = false;
             while((line = in.readLine()) != null){
               if(line.equals("END")){
                 break;
               }
               System.out.println(line);
+              successfulRead = true;
             }
+            if(!successfulRead){
+              serverCrashed = true;
+              System.out.println("Server crashed");
+            }
+            else
+              serverCrashed = false;
 
         } else if (tokens[0].equals("search")) {
           // TODO: send appropriate command to the server and display the
           // appropriate responses form the server
             out.println("search " + tokens[1]);
+            boolean successfulRead = false;
             while((line = in.readLine()) != null){
               if(line.equals("END")){
                 break;
               }
               System.out.println(line);
+              successfulRead = true;
             }
+            if(!successfulRead){
+              serverCrashed = true;
+              System.out.println("Server crashed");
+            }
+            else
+              serverCrashed = false;
 
         } else if (tokens[0].equals("list")) {
           // TODO: send appropriate command to the server and display the
@@ -118,13 +154,16 @@ public class Client {
 
         } else if(tokens[0].equals("deq")){
             out.println("deq");
+            break;
         }else {
           System.out.println("ERROR: No such command");
         }
-      } catch(Exception e){ e.printStackTrace();}
+      } catch(Exception e){ serverCrashed = true;}
       System.out.println("Looping again, and maybe resubmitting because servercrashed = " + serverCrashed);
       if(serverCrashed){
-        servers.remove(currServerIndex);
+        System.out.println("Removing server " + currServerIndex + " in bottom catch");
+        //servers.remove(currServerIndex);
+        crashedServers.add(currServerIndex);
       }
     }
 

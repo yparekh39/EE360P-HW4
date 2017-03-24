@@ -164,6 +164,7 @@ public class ServerThread implements Runnable {
   }
 
   public void signalRequestOrReleaseToOtherServers(String type, String command, int requestTimestamp){
+    System.out.println("we are: " + type);
     ExecutorService executor = Executors.newCachedThreadPool();
     List<Callable<Integer>> requestTaskList = new ArrayList<Callable<Integer>>();
     //Set timestamp to be sent out/used
@@ -190,7 +191,13 @@ public class ServerThread implements Runnable {
     }
     //Check to see if any servers crashed, and let others know if a server crashed
     for(int i = 0; i < requestResponses.size(); i++){
+      System.out.println("REQUEST RESPONSE WAS: " +requestResponses.get(i).intValue());
       if(requestResponses.get(i).intValue() == 0){
+        int crashedID = -1;
+        if(i + 1 < Server.myID)
+          crashedID = i + 1;
+        else
+          crashedID = i + 2;
         for(ServerInfo server : Server.servers){
           try(Socket s = new Socket();){
             try{
@@ -204,9 +211,23 @@ public class ServerThread implements Runnable {
               new BufferedReader(
                 new InputStreamReader(s.getInputStream()));
 
-              outCrash.println("crashed " + server.serverID);
+
+
+              outCrash.println("crashed " + crashedID);
+              System.out.println("We recognized another server has crashed");
+              
+
 
           } catch(Exception e){ }
+          Server.removeCrashedServerRequests(crashedID);
+          Server.queueLock.lock();
+          try{
+            Server.otherRequestAhead.signalAll();
+          } catch (Exception e){
+            e.printStackTrace();
+          } finally {
+            Server.queueLock.unlock();
+          }
         }
       }
     }
